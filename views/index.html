@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Client</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Подключение animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffffff; /* Белый фон всего чата */
+        }
+
+        #chat-window {
+            width: 400px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f1f9fe; /* Фон обоих типов сообщений */
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            border-radius: 10px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-group-item {
+            border: none;
+            margin-bottom: 10px;
+            clear: both;
+            position: relative;
+        }
+
+        .message-left {
+            background-color: #e8f5ff; /* Фон облачка для сообщений с number < 500 */
+            float: left;
+            width: 66.67%; /* 2/3 ширины чата */
+            border-radius: 10px;
+            padding: 10px;
+            animation-duration: 0.5s; /* Длительность анимации */
+            animation-name: slideInLeft; /* Анимация выскальзывания слева */
+        }
+
+        .message-right {
+            background-color: #c2e0ff; /* Фон облачка для сообщений с number >= 500 */
+            float: right;
+            width: 66.67%; /* 2/3 ширины чата */
+            border-radius: 10px;
+            padding: 10px;
+            animation-duration: 0.5s; /* Длительность анимации */
+            animation-name: slideInRight; /* Анимация выскальзывания справа */
+        }
+
+        .message-time {
+            position: absolute;
+            top: -15px;
+            font-size: 12px;
+            color: #999999;
+        }
+
+        /* Определение анимаций */
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <ul class="list-group" id="chat-window"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+
+    function addMessageToChat(message) {
+        const currentTime = new Date().toLocaleTimeString();
+        const formattedMessage = `${currentTime}, ${message.message}, ${message.number}`;
+
+        const messageElement = document.createElement('li');
+        messageElement.classList.add('list-group-item');
+        messageElement.classList.add(message.number < 500 ? 'message-left' : 'message-right'); // Добавляем класс анимации
+
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('animate__animated'); // Добавляем класс анимации
+        messageContent.classList.add(message.number < 500 ? 'animate__slideInLeft' : 'animate__slideInRight'); // Добавляем класс анимации
+        messageContent.classList.add(message.number < 500 ? 'message-left' : 'message-right');
+        messageContent.textContent = formattedMessage;
+
+        const messageTime = document.createElement('span');
+        messageTime.classList.add('message-time');
+        messageTime.textContent = currentTime;
+
+        messageContent.appendChild(messageTime);
+        messageElement.appendChild(messageContent);
+
+        chatWindow.prepend(messageElement);
+    }
+
+    const socket = new WebSocket('ws://localhost:8081/chat');
+
+    socket.onmessage = function (event) {
+        const message = JSON.parse(event.data);
+        addMessageToChat(message);
+    };
+</script>
+</body>
+</html>
